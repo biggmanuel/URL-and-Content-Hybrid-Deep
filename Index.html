@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing Detection Dashboard</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .card { background: #ffffff; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); width: 100%; max-width: 520px; padding: 32px; text-align: center; }
+        .shield-icon { width: 64px; height: 64px; margin-bottom: 12px; }
+        h2 { margin: 8px 0; color: #1a1a1a; font-size: 22px; font-weight: 700; text-transform: uppercase; }
+        p.subtitle { color: #666; font-size: 14px; margin-bottom: 24px; }
+        input[type="text"] { width: 100%; padding: 14px; border: 1.5px solid #dcdfe6; border-radius: 8px; font-size: 15px; outline: none; margin-bottom: 14px;}
+        button.submit-btn { width: 100%; padding: 14px; background: #2563eb; color: #ffffff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;}
+        .result-box { margin-top: 24px; padding: 20px; border-radius: 8px; background: #fafafa; border: 1.5px solid #e5e7eb; text-align: left; display: none; }
+        .badge { display: inline-block; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 14px; color: #fff; margin-bottom: 8px; }
+        .phishing { background: #dc2626; }
+        .legitimate { background: #16a34a; }
+        .bar-container { background: #e5e7eb; border-radius: 999px; height: 12px; overflow: hidden; margin-top: 8px; }
+        .bar-fill { height: 100%; border-radius: 999px; transition: width 0.6s ease; width: 0%;}
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+        <h2>Phishing Detection System</h2>
+        <p class="subtitle">Check if a website is legitimate or phishing</p>
+        
+        <input type="text" id="urlInput" placeholder="e.g. https://www.example.com" />
+        <button id="scanBtn" class="submit-btn">ANALYZE URL</button>
+
+        <p id="loading" style="display:none; color: #2563eb; margin-top: 20px; font-weight: bold;">Analyzing via AI Engine...</p>
+
+        <div id="resultBox" class="result-box">
+            <div id="badge" class="badge"></div>
+            <div style="font-size: 13px; color: #4b5563; margin-bottom: 12px;"><strong>URL:</strong> <span id="scannedUrl"></span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; color: #4b5563;">
+                <span>Confidence Score</span>
+                <strong id="confidenceText"></strong>
+            </div>
+            <div class="bar-container">
+                <div id="barFill" class="bar-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // REPLACE THIS WITH YOUR FIREBASE DATABASE URL
+        const FIREBASE_CONFIG_URL = "https://url-and-content-hybrid-deep-default-rtdb.firebaseio.com/config.json";
+        
+        document.getElementById("scanBtn").addEventListener("click", async () => {
+            const inputUrl = document.getElementById("urlInput").value;
+            if (!inputUrl) return alert("Please enter a URL");
+
+            document.getElementById("resultBox").style.display = "none";
+            document.getElementById("loading").style.display = "block";
+
+            try {
+                // 1. Secretly read the active Localtunnel API link from Firebase
+                const fbResponse = await fetch(FIREBASE_CONFIG_URL);
+                const fbData = await fbResponse.json();
+                const activeApiUrl = fbData.api_url + "/analyze";
+
+                // 2. Send the URL to the Colab Backend
+                // We use headers: {"Bypass-Tunnel-Reminder": "true"} to skip the IP page!
+                const apiResponse = await fetch(activeApiUrl, {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Bypass-Tunnel-Reminder": "true" 
+                    },
+                    body: JSON.stringify({ url: inputUrl })
+                });
+
+                const result = await apiResponse.json();
+                
+                // 3. Display the result on the UI
+                document.getElementById("loading").style.display = "none";
+                document.getElementById("resultBox").style.display = "block";
+                
+                const badge = document.getElementById("badge");
+                const barFill = document.getElementById("barFill");
+                document.getElementById("scannedUrl").innerText = result.scanned_url;
+                
+                let confidencePercent = (result.is_phishing ? result.threat_score : (1 - result.threat_score)) * 100;
+                document.getElementById("confidenceText").innerText = confidencePercent.toFixed(2) + "%";
+                barFill.style.width = confidencePercent + "%";
+
+                if (result.is_phishing) {
+                    badge.innerText = "PHISHING DETECTED";
+                    badge.className = "badge phishing";
+                    barFill.style.background = "#dc2626";
+                } else {
+                    badge.innerText = "LEGITIMATE WEBSITE";
+                    badge.className = "badge legitimate";
+                    barFill.style.background = "#16a34a";
+                }
+
+            } catch (error) {
+                document.getElementById("loading").style.display = "none";
+                alert("Error connecting to the backend. Make sure Colab is running!");
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>
