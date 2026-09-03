@@ -1,47 +1,194 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phishing Detection Dashboard</title>
+    <title>Phishing Detection AI Dashboard</title>
+    <!-- Google Fonts for Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .card { background: #ffffff; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); width: 100%; max-width: 520px; padding: 32px; text-align: center; }
-        .shield-icon { width: 64px; height: 64px; margin-bottom: 12px; }
-        h2 { margin: 8px 0; color: #1a1a1a; font-size: 22px; font-weight: 700; text-transform: uppercase; }
-        p.subtitle { color: #666; font-size: 14px; margin-bottom: 24px; }
-        input[type="text"] { width: 100%; padding: 14px; border: 1.5px solid #dcdfe6; border-radius: 8px; font-size: 15px; outline: none; margin-bottom: 14px;}
-        button.submit-btn { width: 100%; padding: 14px; background: #2563eb; color: #ffffff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;}
-        .result-box { margin-top: 24px; padding: 20px; border-radius: 8px; background: #fafafa; border: 1.5px solid #e5e7eb; text-align: left; display: none; }
-        .badge { display: inline-block; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 14px; color: #fff; margin-bottom: 8px; }
-        .phishing { background: #dc2626; }
-        .legitimate { background: #16a34a; }
-        .bar-container { background: #e5e7eb; border-radius: 999px; height: 12px; overflow: hidden; margin-top: 8px; }
-        .bar-fill { height: 100%; border-radius: 999px; transition: width 0.6s ease; width: 0%;}
+        /* --- CSS VARIABLES FOR THEME SWITCHING --- */
+        :root {
+            --bg-gradient: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+            --card-bg: rgba(255, 255, 255, 0.65);
+            --card-border: rgba(255, 255, 255, 0.8);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --input-bg: rgba(255, 255, 255, 0.9);
+            --input-border: #cbd5e1;
+            --btn-bg: #4f46e5;
+            --btn-hover: #4338ca;
+            --result-bg: rgba(255, 255, 255, 0.8);
+        }
+
+        [data-theme="dark"] {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --card-bg: rgba(15, 23, 42, 0.65);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --input-bg: rgba(30, 41, 59, 0.8);
+            --input-border: #334155;
+            --btn-bg: #6366f1;
+            --btn-hover: #818cf8;
+            --result-bg: rgba(15, 23, 42, 0.8);
+        }
+
+        /* --- GLOBAL STYLES --- */
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; transition: background-color 0.4s, color 0.4s; }
+        
+        body { 
+            background: var(--bg-gradient); 
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; margin: 0; padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* --- THEME TOGGLE BUTTON --- */
+        .theme-toggle {
+            position: absolute; top: 20px; right: 20px;
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            padding: 10px 15px; border-radius: 30px;
+            cursor: pointer; color: var(--text-main); font-size: 1.2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); z-index: 100;
+        }
+        .theme-toggle:hover { transform: scale(1.05); }
+
+        /* --- GLASSMORPHISM CARD --- */
+        .card { 
+            background: var(--card-bg); 
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); 
+            width: 100%; max-width: 550px; padding: 40px; 
+            text-align: center; position: relative;
+        }
+
+        .header-icon {
+            width: 70px; height: 70px; margin: 0 auto 15px auto;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 30px; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        h2 { margin: 0 0 5px 0; color: var(--text-main); font-size: 26px; font-weight: 800; letter-spacing: -0.5px;}
+        p.subtitle { color: var(--text-muted); font-size: 15px; margin-bottom: 30px; }
+
+        /* --- INPUT & BUTTONS --- */
+        .input-group { position: relative; margin-bottom: 20px; }
+        .input-group i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 18px;}
+        
+        input[type="text"] { 
+            width: 100%; padding: 16px 16px 16px 45px; 
+            background: var(--input-bg); border: 1.5px solid var(--input-border); 
+            border-radius: 12px; font-size: 15px; color: var(--text-main);
+            outline: none; transition: all 0.3s ease;
+        }
+        input[type="text"]::placeholder { color: var(--text-muted); }
+        input[type="text"]:focus { border-color: var(--btn-bg); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+
+        button.submit-btn { 
+            width: 100%; padding: 16px; 
+            background: var(--btn-bg); color: #ffffff; 
+            border: none; border-radius: 12px; font-size: 16px; font-weight: 700; 
+            cursor: pointer; transition: all 0.3s ease;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        button.submit-btn:hover { background: var(--btn-hover); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); }
+
+        /* --- LOADING ANIMATION --- */
+        .loader-container { display: none; margin-top: 30px; }
+        .radar-spinner {
+            width: 50px; height: 50px; margin: 0 auto 15px auto;
+            border-radius: 50%; border: 3px solid transparent;
+            border-top-color: var(--btn-bg); border-right-color: var(--btn-bg);
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .loader-text { color: var(--text-main); font-weight: 600; font-size: 15px; }
+
+        /* --- RESULT BOX --- */
+        .result-box { 
+            margin-top: 30px; padding: 25px; border-radius: 16px; 
+            background: var(--result-bg); border: 1px solid var(--card-border); 
+            text-align: left; display: none;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0; transform: translateY(20px);
+        }
+        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+
+        .verdict-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--input-border); }
+        .badge { padding: 8px 16px; border-radius: 8px; font-weight: 800; font-size: 13px; color: #fff; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;}
+        
+        /* Danger vs Safe Colors */
+        .phishing-bg { background: #ef4444; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
+        .legitimate-bg { background: #10b981; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+        .phishing-text { color: #ef4444; }
+        .legitimate-text { color: #10b981; }
+
+        .url-display { font-size: 13px; color: var(--text-muted); word-break: break-all; margin-bottom: 20px; line-height: 1.5; }
+        
+        .score-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .score-label { color: var(--text-main); font-weight: 600; font-size: 15px; }
+        .score-value { font-size: 24px; font-weight: 800; }
+
+        .bar-container { background: var(--input-border); border-radius: 999px; height: 10px; overflow: hidden; width: 100%; }
+        .bar-fill { height: 100%; border-radius: 999px; transition: width 1s cubic-bezier(0.16, 1, 0.3, 1); width: 0%; }
     </style>
 </head>
 <body>
 
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="themeToggle" title="Toggle Dark/Light Mode">
+        <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
+
     <div class="card">
-        <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-        </svg>
-        <h2>Phishing Detection System</h2>
-        <p class="subtitle">Check if a website is legitimate or phishing</p>
+        <div class="header-icon">
+            <i class="fas fa-shield-halved"></i>
+        </div>
+        <h2>Deep Threat Scanner</h2>
+        <p class="subtitle">AI-Powered Hybrid Phishing Detection</p>
         
-        <input type="text" id="urlInput" placeholder="e.g. https://www.example.com" />
-        <button id="scanBtn" class="submit-btn">ANALYZE URL</button>
+        <div class="input-group">
+            <i class="fas fa-link"></i>
+            <input type="text" id="urlInput" placeholder="Enter suspicious URL (e.g., example.com)" autocomplete="off" />
+        </div>
+        
+        <button id="scanBtn" class="submit-btn">
+            <i class="fas fa-radar"></i> ANALYZE THREAT
+        </button>
 
-        <p id="loading" style="display:none; color: #2563eb; margin-top: 20px; font-weight: bold;">Analyzing URL & Content...</p>
+        <!-- Loading State -->
+        <div id="loading" class="loader-container">
+            <div class="radar-spinner"></div>
+            <div class="loader-text">Extracting 111 Features & Analyzing...</div>
+        </div>
 
+        <!-- Results State -->
         <div id="resultBox" class="result-box">
-            <div id="badge" class="badge"></div>
-            <div style="font-size: 13px; color: #4b5563; margin-bottom: 12px;"><strong>URL:</strong> <span id="scannedUrl"></span></div>
-            <div style="display: flex; justify-content: space-between; font-size: 13px; color: #4b5563;">
-                <span>Confidence Score</span>
-                <strong id="confidenceText"></strong>
+            <div class="verdict-header">
+                <div>
+                    <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Final Verdict</div>
+                    <div id="badge" class="badge"></div>
+                </div>
+                <i id="verdictIcon" class="fas fa-circle-check" style="font-size: 32px;"></i>
             </div>
+            
+            <div class="url-display">
+                <strong style="color: var(--text-main);">Target:</strong> <span id="scannedUrl"></span>
+            </div>
+            
+            <div class="score-row">
+                <span class="score-label">Threat Confidence</span>
+                <span id="confidenceText" class="score-value"></span>
+            </div>
+            
             <div class="bar-container">
                 <div id="barFill" class="bar-fill"></div>
             </div>
@@ -49,24 +196,59 @@
     </div>
 
     <script>
-        // REPLACE THIS WITH YOUR FIREBASE DATABASE URL
+        // --- 1. DARK MODE TOGGLE LOGIC ---
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const htmlElement = document.documentElement;
+
+        // Check local storage for saved theme preference
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        htmlElement.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = htmlElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            htmlElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+
+        function updateThemeIcon(theme) {
+            if(theme === 'dark') {
+                themeIcon.className = 'fas fa-sun';
+                themeIcon.style.color = '#fbbf24'; // yellow sun
+            } else {
+                themeIcon.className = 'fas fa-moon';
+                themeIcon.style.color = '#1e293b'; // dark moon
+            }
+        }
+
+
+        // --- 2. SCANNER LOGIC ---
+        // REPLACE THIS WITH YOUR ACTUAL FIREBASE DATABASE URL
         const FIREBASE_CONFIG_URL = "https://url-and-content-hybrid-deep-default-rtdb.firebaseio.com/config.json";
         
         document.getElementById("scanBtn").addEventListener("click", async () => {
-            const inputUrl = document.getElementById("urlInput").value;
-            if (!inputUrl) return alert("Please enter a URL");
+            const inputUrl = document.getElementById("urlInput").value.trim();
+            if (!inputUrl) {
+                alert("Please enter a URL to analyze.");
+                return;
+            }
 
+            // UI Reset
             document.getElementById("resultBox").style.display = "none";
             document.getElementById("loading").style.display = "block";
+            document.getElementById("scanBtn").disabled = true;
+            document.getElementById("scanBtn").style.opacity = "0.7";
 
             try {
-                // 1. Secretly read the active Localtunnel API link from Firebase
+                // Fetch dynamic Localtunnel URL
                 const fbResponse = await fetch(FIREBASE_CONFIG_URL);
                 const fbData = await fbResponse.json();
                 const activeApiUrl = fbData.api_url + "/analyze";
 
-                // 2. Send the URL to the Colab Backend
-                // We use headers: {"Bypass-Tunnel-Reminder": "true"} to skip the IP page!
+                // Send Payload
                 const apiResponse = await fetch(activeApiUrl, {
                     method: "POST",
                     headers: { 
@@ -78,32 +260,57 @@
 
                 const result = await apiResponse.json();
                 
-                // 3. Display the result on the UI
+                // Hide Loader, Show Result
                 document.getElementById("loading").style.display = "none";
                 document.getElementById("resultBox").style.display = "block";
+                document.getElementById("scanBtn").disabled = false;
+                document.getElementById("scanBtn").style.opacity = "1";
                 
+                // Populate DOM
                 const badge = document.getElementById("badge");
                 const barFill = document.getElementById("barFill");
+                const verdictIcon = document.getElementById("verdictIcon");
+                const confText = document.getElementById("confidenceText");
+                
                 document.getElementById("scannedUrl").innerText = result.scanned_url;
                 
                 let confidencePercent = (result.is_phishing ? result.threat_score : (1 - result.threat_score)) * 100;
-                document.getElementById("confidenceText").innerText = confidencePercent.toFixed(2) + "%";
-                barFill.style.width = confidencePercent + "%";
+                confText.innerText = confidencePercent.toFixed(1) + "%";
+                
+                // Animate bar from 0 to target width
+                setTimeout(() => {
+                    barFill.style.width = confidencePercent + "%";
+                }, 100);
 
+                // Apply Colors & Icons based on Threat Verdict
                 if (result.is_phishing) {
-                    badge.innerText = "PHISHING DETECTED";
-                    badge.className = "badge phishing";
-                    barFill.style.background = "#dc2626";
+                    badge.innerHTML = '<i class="fas fa-triangle-exclamation"></i> MALICIOUS';
+                    badge.className = "badge phishing-bg";
+                    verdictIcon.className = "fas fa-shield-virus phishing-text";
+                    confText.className = "score-value phishing-text";
+                    barFill.style.background = "#ef4444";
                 } else {
-                    badge.innerText = "LEGITIMATE WEBSITE";
-                    badge.className = "badge legitimate";
-                    barFill.style.background = "#16a34a";
+                    badge.innerHTML = '<i class="fas fa-check"></i> SAFE';
+                    badge.className = "badge legitimate-bg";
+                    verdictIcon.className = "fas fa-shield-check legitimate-text";
+                    confText.className = "score-value legitimate-text";
+                    barFill.style.background = "#10b981";
                 }
 
             } catch (error) {
                 document.getElementById("loading").style.display = "none";
-                alert("Error connecting to the backend. Make sure Colab is running!");
+                document.getElementById("scanBtn").disabled = false;
+                document.getElementById("scanBtn").style.opacity = "1";
+                alert("Error connecting to the backend. Please ensure the Python server is running.");
                 console.error(error);
+            }
+        });
+
+        // Allow pressing 'Enter' to trigger scan
+        document.getElementById("urlInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                document.getElementById("scanBtn").click();
             }
         });
     </script>
