@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phishing Detection AI Dashboard</title>
+    <title>Phishing Detection System</title>
     <!-- Google Fonts for Modern Typography -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
@@ -152,8 +152,8 @@
         <div class="header-icon">
             <i class="fas fa-shield-halved"></i>
         </div>
-        <h2>Deep Threat Scanner</h2>
-        <p class="subtitle">AI-Powered Hybrid Phishing Detection</p>
+        <h2>PHISHING DETECTION SYSTEM</h2>
+        <p class="subtitle">Check if a website is legitimate or phishing</p>
         
         <div class="input-group">
             <i class="fas fa-link"></i>
@@ -161,13 +161,13 @@
         </div>
         
         <button id="scanBtn" class="submit-btn">
-            <i class="fas fa-radar"></i> ANALYZE THREAT
+            <i class="fas fa-radar"></i> ANALYZE URL
         </button>
 
         <!-- Loading State -->
         <div id="loading" class="loader-container">
             <div class="radar-spinner"></div>
-            <div class="loader-text">Extracting 111 Features & Analyzing...</div>
+            <div class="loader-text">Analyzing URL & Content...</div>
         </div>
 
         <!-- Results State -->
@@ -185,7 +185,7 @@
             </div>
             
             <div class="score-row">
-                <span class="score-label">Threat Confidence</span>
+                <span class="score-label">Confidence Score</span>
                 <span id="confidenceText" class="score-value"></span>
             </div>
             
@@ -284,13 +284,13 @@
 
                 // Apply Colors & Icons based on Threat Verdict
                 if (result.is_phishing) {
-                    badge.innerHTML = '<i class="fas fa-triangle-exclamation"></i> MALICIOUS';
+                    badge.innerHTML = '<i class="fas fa-triangle-exclamation"></i> PHISHING';
                     badge.className = "badge phishing-bg";
                     verdictIcon.className = "fas fa-shield-virus phishing-text";
                     confText.className = "score-value phishing-text";
                     barFill.style.background = "#ef4444";
                 } else {
-                    badge.innerHTML = '<i class="fas fa-check"></i> SAFE';
+                    badge.innerHTML = '<i class="fas fa-check"></i> LEGITIMATE';
                     badge.className = "badge legitimate-bg";
                     verdictIcon.className = "fas fa-shield-check legitimate-text";
                     confText.className = "score-value legitimate-text";
